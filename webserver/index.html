@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `webserver` crate."><meta name="keywords" content="rust, rustlang, rust-lang, webserver"><title>webserver - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../webserver/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate webserver</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all webserver's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'webserver', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/webserver/main.rs.html#1-180' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>webserver</a></span></h1><div class='docblock'><p>Server for Maximise website.</p>
+<h1 id="routes" class="section-header"><a href="#routes">Routes</a></h1>
+<ul>
+<li>/users
+<ul>
+<li>/create - creates new user</li>
+<li>/list - lists all usernames</li>
+<li>/login - logs in user with username and password, returning a session ID</li>
+<li>/delete - deletes user</li>
+<li>/logout - logs out user from all sessions</li>
+<li>/change_password - replaces a user's password</li>
+<li>/get_data - returns data stored for a user</li>
+<li>/update_data - replaces currently stored data for a user with new data</li>
+</ul>
+</li>
+<li>/codes
+<ul>
+<li>/get_next - gets next available code and marks it as sold</li>
+</ul>
+</li>
+</ul>
+<p>For more information see the <a href="../webserver/database/index.html"><code>database</code></a> module.</p>
+<h1 id="usage-of-users" class="section-header"><a href="#usage-of-users">Usage of /users</a></h1>
+<p>Generally the website will be using the <code>/users</code> section of the API. Every route in the <code>/users</code> section apart from <code>/get_data</code>
+and <code>update_data</code> is for <strong>high level access</strong>. High level access involves authenticating users, creating, deleting and
+modifying critical user information, such as passwords.</p>
+<p>The <code>/get_data</code> and <code>/update_data</code> routes are for <strong>low level access</strong>. This allows easy access to other user data, such as
+information stored by the website itself. <strong>This includes email addresses</strong>.</p>
+<p>In order to read or modify any user data, the user must first be authenticated through <code>/login</code>. If successful, a session ID
+will be provided to the client as an easy means of access to the user data for the current client session. In this case,
+session ID is used like a temporary password, so username must still be provided every time it is used. The reasoning behind
+this is that the bcrypt hashing algorithm is designed to take a long time to hash and verify passwords, meaning that if the
+username and password is provided for every single access to the server, the user experience will be incredibly slow, as every
+action they make would take upwards of 10 seconds. The session ID is instead used as a proof that the user has been authenticated
+on that client recently, and verifying the session ID involves no hashing, meaning that it is much faster. Obviously the sesssions
+are frequently reset and therefore sessions will expire eventually. <strong>Every time the user logs out of the website, they should also
+be logged out on the server-side, using <code>/logout</code> so that their sessions can be deleted.</strong></p>
+<p>For more information see the <a href="../webserver/database/index.html"><code>database</code></a> module.</p>
+<h1 id="usage-of-codesget_next" class="section-header"><a href="#usage-of-codesget_next">Usage of /codes/get_next</a></h1>
+<p>This is not designed for use on the website. This is designed as an easy way to both generate codes and let the server know when
+codes are generated. We could either put the codes in the box, or when selling the box, we could simply get the email address of
+the customer, generate a code and email the code to them.</p>
+<p>The codes are not necessarily unique to each user, but at any one time, the codes available to use are all different. This means
+that codes should not be used as a unique user ID.</p>
+<h1 id="general-information" class="section-header"><a href="#general-information">General information</a></h1>
+<p>At any given time, it should be assumed that the server holds the most up-to-date version of the data, even if the data in the
+database does not match with the data in the server. This is because the database is updated a minimum of once a day, which means
+that it can often hold out-of-date information. The database should never be directly accessed anyway, because that is what this
+server is for.</p>
+<p>The database <em>cannot</em> be directly accessed, because the database access rules only allow for the server to access it.</p>
+<p>The server will be restarted once a day, meaning that it will go offline very shortly once a day, at some off-peak time. Furthermore,
+the server will go to sleep after one hour of no requests - when the server is asleep, it may take a few more seconds than normal
+for it to respond to the first request. The best way to counteract this is to ping the server with <code>/users/list</code> when a user clicks
+the login/signup button. This will not only wake up the server, but the client can then immediately respond to the username entered,
+warning if the username is taken or doesn't exist as appropriate.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr class='module-item'><td><a class="mod" href="database/index.html" title='webserver::database mod'>database</a></td><td class='docblock-short'><p>Handles all requests.</p>
+</td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table><tr class='module-item'><td><a class="fn" href="fn.authenticate.html" title='webserver::authenticate fn'>authenticate</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.deauthenticate.html" title='webserver::deauthenticate fn'>deauthenticate</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.main.html" title='webserver::main fn'>main</a></td><td class='docblock-short'></td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "webserver";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
